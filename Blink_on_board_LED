@@ -1,0 +1,48 @@
+#include <TimerOne.h> // Include TimerOne library to code
+
+#define ADC_VREF_mV 5000.0 
+#define ADC_RESOLUTION 1024.0
+#define PIN_LM35 A1 // Analog pin (A1) connected to LM35 temperature sensor
+#define LED_PIN 13 // Onboard LED pin (13)
+
+volatile int blinkInterval = 250; // Default blink interval (250millisecond)
+volatile bool ledState = LOW; // Initial LED state (OFF)
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT); // Initializing the onboard LED pin (13)
+  Serial.begin(9600); // baud rate of 9600
+
+  // setting up the TimerOne to call the blinkLED function
+
+  Timer1.initialize(blinkInterval * 1000); // Interval in microseconds
+  Timer1.attachInterrupt(blinkLED);
+}
+
+void loop() {
+
+  // Get the ADC value from the temperature sensor
+  int adcval = analogRead(PIN_LM35);
+
+  // Convert the ADC value to voltage in millivolts
+  float milliVolt = adcval * (ADC_VREF_mV / ADC_RESOLUTION);
+
+  // Convert the voltage to the temperature in Celsius
+  float tempC = milliVolt / 10;
+
+  // Print the temperature in the Serial Monitor
+  Serial.print("Temperature: ");
+  Serial.print(tempC);
+  Serial.println("°C");
+
+  // Update blink interval based on temperature
+  if (tempC < 30) {
+    blinkInterval = 250; // Below 30°C: LED blinks for 250 milliseconds
+  } else {
+    blinkInterval = 500; // Above or equal to 30°C: LED blinks for 500 milliseconds
+  }
+}
+
+void blinkLED() {
+  ledState = !ledState; 
+  digitalWrite(LED_PIN, ledState); 
+}
